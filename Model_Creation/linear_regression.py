@@ -1,10 +1,22 @@
-import numpy
+import numpy as np
 
-params = [0,0,0]
-samples = [[1,1,1],[1,2,2],[1,3,3],[1,4,4],[1,5,5]]
-y = [2,4,6,8,10]
 
-def hypothesis(params, samples):
-    return numpy.dot(samples,params)
+def hypothesis(params, sample, intercept):
+    """
+    Calcula la hipótesis de una ecuación lineal. Sumo el bias al final de la ecuación.
+    Me parece mejor de esta forma en vez de hacer el arreglo con 1 al principio.
+    """
+    return np.dot(params, sample) + intercept
 
-print(hypothesis(params, samples))
+
+def cost_function(params, intercept, samples, y):
+    """
+    Calculo la función del MSE, es la que hemos visto en clase, nada fancy.
+    """
+    m = len(y)
+    total_error = 0
+    for i in range(m):
+        prediction = h(params, samples[i], intercept)
+        total_error += (prediction - y[i]) ** 2
+    return total_error / (2 * m)
+
