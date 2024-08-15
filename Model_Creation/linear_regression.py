@@ -9,19 +9,20 @@ def hypothesis(params, sample, intercept):
 
 def cost_function(params, intercept, samples, y):
     """
-    Calculo la función del MSE, es la que hemos visto en clase, nada fancy.
+    Calculo la función del MSE, es la que hemos visto en clase, nada fancy. Me basé en este código de stack overflow:
+    https://stackoverflow.com/questions/16774849/mean-squared-error-in-numpy, pero al platicarlo con benji, me dijo que para que 
+    no fallara, tenía que tener mi y_prima ya calulada.
     """
-    m = len(y)
-    total_error = 0
-    for i in range(m):
-        prediction = hypothesis(params, samples[i], intercept)
-        total_error += (prediction - y[i]) ** 2
-    return total_error / (2 * m)
+    y_prima = np.dot(samples, params) + intercept
+    mse = np.mean(np.square(y_prima - y)) / 2
+    
+    return mse
 
 
 def gradient_descent(params, intercept, samples, y, alpha, iterations):
     """
-    Implementa el algoritmo de gradiente descendiente, 
+    Implemento el algoritmo de gradiente descendiente, me base en el código que Beji nos dio de regresion lineal.
+    Solo que en vez de hacerlo con listas, lo hago con arrays de numpy directamente.
     """
     m = len(y)
 
@@ -37,6 +38,7 @@ def gradient_descent(params, intercept, samples, y, alpha, iterations):
         # Actualizar los parámetros y el intercepto
         params -= alpha * gradient_params
         intercept -= alpha * gradient_intercept
+        print(intercept)
 
     return params, intercept
 
