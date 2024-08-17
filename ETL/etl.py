@@ -6,6 +6,7 @@ For more info on the dataset, I addded the files into the repossitory, you can f
 
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 columns = ["Symboling","Normalized-losses","Make","Fuel-type", "Aspiration", "Num-of-doors", "Body-style","Drive-wheels","Engine-location","Wheel-base","Length","Width","Height", "Curb-weight", "Engine-type" , "Num-of-cylinders", "Engine-size", "Fuel-system", "Bore", "Stroke", "Compression-ratio", "Horsepower", "Peak-rpm", "City-mpg", "Highway-mpg", "Price"]
 df = pd.read_csv('/Users/juanpablocabreraquiroga/Documents/Machine_Learning/ETL/automobile/imports-85.data', names = columns)
@@ -87,6 +88,25 @@ df.fillna(df.mean(), inplace=True)
 print(df.isnull().sum())
 
 # now I will save the data into a new csv file, just because I want to have a backup of the data.
-#df.to_csv('automobile_cleaned.csv', index = False)
+df.to_csv('automobile_cleaned.csv', index = False)
 # I only runned it once, so I commented it out to avoid overwriting the file.
+# UPDATE I actually made some changes so I will not use this line, I will save it later.
 
+# Now, I needed to verify that the data is not in order.
+# I dont see a need to shuffle the data since it it is not a classification problem.
+
+# Now I also need to do one last thing we learned today in class which is to normalize the data.
+# I was genuinely searching online for a way to do this without using the sklearn library, but I couldn't find a way to do it.
+
+scaler = StandardScaler()
+df_scaled = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+
+# Save the scaled data
+df_scaled.to_csv('automobile_cleaned_scaled.csv', index=False)
+
+# UPDATE. 
+# I believe that the mean data I saved earlier is not the best way to represent the data that is measing, so I will use the mode
+# to fill the missing values and save the data again.
+
+# UPDATE.
+# It actually didn't work, so I will use the mean to fill the missing values and save the data again. I believe that the mean is the best way to fill the missing values.
