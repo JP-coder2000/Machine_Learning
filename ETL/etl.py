@@ -7,7 +7,7 @@ For more info on the dataset, I addded the files into the repossitory, you can f
 import pandas as pd
 import numpy as np
 
-columns = ["Symboling","Normalized-losses","Make","Fuel-type", "Aspiration", "Num-of-doors", "Body-style","Drive-wheels","Wheel-base","Length","Width","Height", "Curb-weight", "Engine-type" , "Num-of-cylinders", "Engine-size", "Fuel-system", "Bore", "Stroke", "Compression-ratio", "Horsepower", "Peak-rpm", "City-mpg", "Highway-mpg", "Price"]
+columns = ["Symboling","Normalized-losses","Make","Fuel-type", "Aspiration", "Num-of-doors", "Body-style","Drive-wheels","Engine-location","Wheel-base","Length","Width","Height", "Curb-weight", "Engine-type" , "Num-of-cylinders", "Engine-size", "Fuel-system", "Bore", "Stroke", "Compression-ratio", "Horsepower", "Peak-rpm", "City-mpg", "Highway-mpg", "Price"]
 df = pd.read_csv('/Users/juanpablocabreraquiroga/Documents/Machine_Learning/ETL/automobile/imports-85.data', names = columns)
 
 #print(df.head())
@@ -23,15 +23,15 @@ print(missing_values_per_column)
 # The oder columns with missing values I will do what Benji told us about inputing the missing values with the mean of the column.
 
 df.drop("Normalized-losses", axis = 1, inplace = True)
-df.fillna(df.mean(), inplace=True)
-print(df.head())
+#df.fillna(df.mean(), inplace=True)
+#print(df.head())
 
 # Okey, I encountered a problem, the columns "Num-of-doors" and "Num-of-cylinders" are not numerical, so I can't calculate the mean of them.
 # The easiest solution is to drop the rows with missing values in these columns. But we are currently seeing in the classroom that I can convert
 # columns with string values to numerical values, so I will do that. And after that I will calculate the Mean of the columns.
 # I will actually do that for all the columns that are not numerical.
 
-# Crear diccionarios para convertir valores de texto a valores numéricos
+#Creating the dictionaries for the columns that are not numerical
 make_dict = {
     "alfa-romero": 1, "audi": 2, "bmw": 3, "chevrolet": 4, "dodge": 5, "honda": 6, "isuzu": 7, "jaguar": 8,
     "mazda": 9, "mercedes-benz": 10, "mercury": 11, "mitsubishi": 12, "nissan": 13, "peugot": 14, "plymouth": 15,
@@ -56,7 +56,7 @@ num_of_cylinders_dict = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "
 
 fuel_system_dict = {"1bbl": 1, "2bbl": 2, "4bbl": 3, "idi": 4, "mfi": 5, "mpfi": 6, "spdi": 7, "spfi": 8}
 
-# Aplicar el mapeo a las columnas correspondientes
+# Changing the values of the columns
 df["Make"] = df["Make"].map(make_dict)
 df["Fuel-type"] = df["Fuel-type"].map(fuel_type_dict)
 df["Aspiration"] = df["Aspiration"].map(aspiration_dict)
@@ -68,13 +68,25 @@ df["Engine-type"] = df["Engine-type"].map(engine_type_dict)
 df["Num-of-cylinders"] = df["Num-of-cylinders"].map(num_of_cylinders_dict)
 df["Fuel-system"] = df["Fuel-system"].map(fuel_system_dict)
 
-# Verificar el resultado
-print(df.head())
+#print(df.dtypes)
 
-# Imputar los valores faltantes con la media de la columna
+#After changing the values, I encountered a new error which was that some columns where "object" type, so I will convert them to numerical values
+# in order to calculate the mean of the columns. And finally be able to have all my data in a numerical format.
+object_columns = df.select_dtypes(include=['object']).columns
+print("Columns with object dtype:", object_columns)
+
+# I got this from this link: https://stackoverflow.com/questions/15891038/change-column-type-in-pandas, very helpful
+for col in object_columns:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+
+# Finally I will calculate the mean of the columns and fill the missing values with the mean of the column.
 df.fillna(df.mean(), inplace=True)
 
-# Verificar que no haya valores faltantes
+# Check for any remaining NaN values
 print(df.isnull().sum())
 
+# now I will save the data into a new csv file, just because I want to have a backup of the data.
+#df.to_csv('automobile_cleaned.csv', index = False)
+# I only runned it once, so I commented it out to avoid overwriting the file.
 
