@@ -109,4 +109,5 @@ df_scaled.to_csv('automobile_cleaned_scaled.csv', index=False)
 # to fill the missing values and save the data again.
 
 # UPDATE.
-# It actually didn't work, so I will use the mean to fill the missing values and save the data again. I believe that the mean is the best way to fill the missing values.
+# It actually didn't work, so I will use the mean to fill the missing values and save the data again. 
+# I believe that the mean is the best way to fill the missing values.

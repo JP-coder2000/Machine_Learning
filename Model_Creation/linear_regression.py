@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def hypothesis(params, sample, bias):
     """
@@ -43,13 +44,8 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
 
     return params, bias
 
-
-params = np.array([0.0, 0.0]) 
-bias = 0.0 
-
-
-samples = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
-y = np.array([2, 4, 6, 8, 10])
+#samples = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
+#y = np.array([2, 4, 6, 8, 10])
 
 # Coeficiente de aprendizaje 
 alpha = 0.01 
@@ -57,12 +53,61 @@ alpha = 0.01
 iterations = 1000 
 
 
-params, bias = gradient_descent(params, bias, samples, y, alpha, iterations)
+# Después de hacer el ETL, ahora si voy a usar mi modelo lineal para empezar a predecir los precios de los carros.
+# Pero primero tengo que hacer lo que vimos en clase de separar los datos en entrenamiento y prueba.
 
+def train_test_split(X, y, test_size=0.2, random_state=None):
+    """
+    Esta es una función muy sencilla para separar los datos de entrenamiento y prueba.
+    """
+    
+    if random_state is not None:
+        np.random.seed(random_state)
+    
+    n_samples = len(X)
+    n_test = int(n_samples * test_size)
+    
+    indices = np.random.permutation(n_samples)
+    
+    test_indices = indices[-n_test:]
+    train_indices = indices[:-n_test]
+    
+    X_train = X[train_indices]
+    X_test = X[test_indices]
+    y_train = y[train_indices]
+    y_test = y[test_indices]
+    
+    return X_train, X_test, y_train, y_test
+
+
+# Empiezo con el import de los datos limpios y escalados
+df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
+
+# Dropeo la columna de precios para tener mis datos de entrenamiento
+X = df_scaled.drop('Price', axis=1).values
+y = df_scaled['Price'].values
+
+# Separo los datos en entrenamiento y prueba
+# Le pongo 42 porque 42 es el resultado para todo
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+params = np.zeros(X_train.shape[1])
+bias = 0.0 
+
+
+params, bias = gradient_descent(params, bias, X_train.T, y_train, alpha, iterations)
+
+# Calcular el costo final en los datos de entrenamiento
+final_cost_train = cost_function(params, bias, X_train, y_train)
+
+# Calcular el costo final en los datos de prueba
+final_cost_test = cost_function(params, bias, X_test, y_test)
 
 print("Parámetros finales:", params)
 print("Bias final:", bias)
+print("Costo final (entrenamiento):", final_cost_train)
+print("Costo final (prueba):", final_cost_test)
 
-
-final_cost = cost_function(params, bias, samples, y)
-print("Costo final:", final_cost)
+# Intento hacer una predicción
+y_pred = np.dot(X_test, params) + bias
+print(y_pred)
