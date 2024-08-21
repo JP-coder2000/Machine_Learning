@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+
 
 def hypothesis(params, sample, bias):
     """
@@ -23,24 +26,23 @@ def cost_function(params, bias, samples, y):
 
 def gradient_descent(params, bias, samples, y, alpha, iterations):
     """
-    Implemento el algoritmo de gradiente descendiente, me base en el código que Beji nos dio de regresion lineal.
+    Implemento el algoritmo de gradiente descendiente, me base en el código que Benji nos dio de regresion lineal.
     Solo que en vez de hacerlo con listas, lo hago con arrays de numpy directamente.
     """
     m = len(y)
 
     for _ in range(iterations):
-        #Le sumo el bias a la hipótesis, esto lo platiqué con Benji para no tener que tener un arreglo con 1 al principio.
-        predictions = np.dot(params, samples) + bias
+        # Le sumo el bias a la hipótesis, esto lo platiqué con Benji para no tener que tener un arreglo con 1 al principio.
+        predictions = np.dot(samples.T, params) + bias
         errors = predictions - y
         
         # Calcular los gradientes
-        gradient_params = (1/m) * np.dot(samples.T, errors)
+        gradient_params = (1/m) * np.dot(samples, errors)
         gradient_bias = (1/m) * np.sum(errors)
         
-        # Actualizar los parámetros y el biaso
+        # Actualizar los parámetros y el bias
         params -= alpha * gradient_params
         bias -= alpha * gradient_bias
-        print(bias)
 
     return params, bias
 
@@ -111,3 +113,24 @@ print("Costo final (prueba):", final_cost_test)
 # Intento hacer una predicción
 y_pred = np.dot(X_test, params) + bias
 print(y_pred)
+
+# Ahora quiero organizar todo lo que veo, lo voy a plotear en un scatter plot para ver si se ve bien.
+# Esto lo hago porque como Benji nos dijo en clase, tenemos que ver que haga sentido lo que estamos haciendo.
+#Plot de train
+plt.figure(figsize=(12, 6))
+plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data')
+plt.scatter(range(len(y_train)), np.dot(X_train, params) + bias, color='orange', label='Predicted Training Data')
+plt.title('Training Data: Actual vs Predicted')
+plt.xlabel('Sample Index')
+plt.ylabel('Price')
+plt.legend()
+plt.show()
+#Plot de test
+plt.figure(figsize=(12, 6))
+plt.scatter(range(len(y_test)), y_test, color='blue', label='Actual Test Data')
+plt.scatter(range(len(y_test)), y_pred, color='orange', label='Predicted Test Data')
+plt.title('Test Data: Actual vs Predicted')
+plt.xlabel('Sample Index')
+plt.ylabel('Price')
+plt.legend()
+plt.show()
