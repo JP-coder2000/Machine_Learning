@@ -120,7 +120,7 @@ while True:  #  run gradient descent until local minima is reached
 	show_errors(params, samples, y)  #only used to show errors, it is not used in calculation
 	print (params)
 	epochs = epochs + 1
-	if(oldparams == params or epochs == 1000):   #  local minima is found when there is no further improvement
+	if(oldparams == params or epochs == 1500):   #  local minima is found when there is no further improvement
 		print ("samples:")
 		print(samples)
 		print ("final params:")

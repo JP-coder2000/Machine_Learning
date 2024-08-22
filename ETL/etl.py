@@ -83,7 +83,15 @@ for col in object_columns:
 
 
 # Finally I will calculate the mean of the columns and fill the missing values with the mean of the column.
-df.fillna(df.mean(), inplace=True)
+#Update: I will use mean and mode to fill the missing values.
+price_column = df['Price']
+other_columns = df.drop('Price', axis=1)
+
+mode_imputer = other_columns.mode().iloc[0]
+other_columns_imputed = other_columns.fillna(mode_imputer)
+
+price_imputed = price_column.fillna(price_column.mean())
+df = pd.concat([other_columns_imputed, price_imputed], axis=1)
 
 # Check for any remaining NaN values
 print(df.isnull().sum())

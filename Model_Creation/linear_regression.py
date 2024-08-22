@@ -52,7 +52,7 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
 # Coeficiente de aprendizaje 
 alpha = 0.01 
 # Numero de iteraciones máximas
-iterations = 1000 
+iterations = 3000 
 
 
 # Después de hacer el ETL, ahora si voy a usar mi modelo lineal para empezar a predecir los precios de los carros.
