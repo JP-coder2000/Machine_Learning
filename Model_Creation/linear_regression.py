@@ -52,7 +52,7 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
 # Coeficiente de aprendizaje 
 alpha = 0.01 
 # Numero de iteraciones máximas
-iterations = 3000 
+iterations = 1000000
 
 
 # Después de hacer el ETL, ahora si voy a usar mi modelo lineal para empezar a predecir los precios de los carros.
@@ -81,6 +81,12 @@ def train_test_split(X, y, test_size=0.2, random_state=None):
     
     return X_train, X_test, y_train, y_test
 
+# Update, tengo que hacer la función para sacer el r^2
+def r2_score(y_true, y_pred):
+    ss_residual = np.sum((y_true - y_pred) ** 2)
+    ss_total = np.sum((y_true - np.mean(y_true)) ** 2)
+    r2 = 1 - (ss_residual / ss_total)
+    return r2
 
 # Empiezo con el import de los datos limpios y escalados
 df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
@@ -99,37 +105,76 @@ bias = 0.0
 
 params, bias = gradient_descent(params, bias, X_train.T, y_train, alpha, iterations)
 
-# Calcular el costo final en los datos de entrenamiento
+# Calcular el error final en los datos de entrenamiento y prueba
 final_cost_train = cost_function(params, bias, X_train, y_train)
-
-# Calcular el costo final en los datos de prueba
 final_cost_test = cost_function(params, bias, X_test, y_test)
 
-print("Parámetros finales:", params)
+#print("Parámetros finales:", params)
 print("Bias final:", bias)
-print("Costo final (entrenamiento):", final_cost_train)
-print("Costo final (prueba):", final_cost_test)
+print("Error final (entrenamiento):", final_cost_train)
+print("Error final (prueba):", final_cost_test)
 
-# Intento hacer una predicción
-y_pred = np.dot(X_test, params) + bias
-print(y_pred)
+# Calcular R^2
+y_train_pred = np.dot(X_train, params) + bias
+y_test_pred = np.dot(X_test, params) + bias
 
-# Ahora quiero organizar todo lo que veo, lo voy a plotear en un scatter plot para ver si se ve bien.
-# Esto lo hago porque como Benji nos dijo en clase, tenemos que ver que haga sentido lo que estamos haciendo.
-#Plot de train
-plt.figure(figsize=(12, 6))
+r2_train = r2_score(y_train, y_train_pred)
+r2_test = r2_score(y_test, y_test_pred)
+
+print("R^2 en conjunto de entrenamiento:", r2_train)
+print("R^2 en conjunto de prueba:", r2_test)
+
+# Determinar si el modelo está fitting, underfitting o overfitting
+if abs(r2_train - r2_test) < 0.05:
+    print("El modelo está correctamente ajustado (fitting).")
+elif r2_train > r2_test:
+    print("El modelo está sobreajustado (overfitting).")
+else:
+    print("El modelo está subajustado (underfitting).")
+    
+    
+# Calcular el grado de bias basado en R^2 en el conjunto de entrenamiento
+if r2_train > 0.8:
+    print("Bias bajo.")
+elif 0.5 <= r2_train <= 0.8:
+    print("Bias medio.")
+else:
+    print("Bias alto.")
+
+# Generar predicciones
+y_train_pred = np.dot(X_train, params) + bias
+y_test_pred = np.dot(X_test, params) + bias
+
+
+plt.figure(figsize=(14, 8))
+
+
+plt.subplot(3, 1, 1)
 plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data')
-plt.scatter(range(len(y_train)), np.dot(X_train, params) + bias, color='orange', label='Predicted Training Data')
+plt.scatter(range(len(y_train)), y_train_pred, color='orange', label='Predicted Training Data')
 plt.title('Training Data: Actual vs Predicted')
 plt.xlabel('Sample Index')
 plt.ylabel('Price')
 plt.legend()
-plt.show()
-#Plot de test
-plt.figure(figsize=(12, 6))
-plt.scatter(range(len(y_test)), y_test, color='blue', label='Actual Test Data')
-plt.scatter(range(len(y_test)), y_pred, color='orange', label='Predicted Test Data')
+
+
+plt.subplot(3, 1, 2)
+plt.scatter(range(len(y_test)), y_test, color='green', label='Actual Test Data')
+plt.scatter(range(len(y_test)), y_test_pred, color='red', label='Predicted Test Data')
 plt.title('Test Data: Actual vs Predicted')
+plt.xlabel('Sample Index')
+plt.ylabel('Price')
+plt.legend()
+
+plt.figure(figsize=(14, 8))
+
+# Comparación de datos de entrenamiento y prueba con los valores reales
+plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data', alpha=0.6)
+plt.scatter(range(len(y_test)), y_test, color='green', label='Actual Test Data', alpha=0.6)
+plt.scatter(range(len(y_train_pred)), y_train_pred, color='orange', label='Predicted Training Data', alpha=0.6)
+plt.scatter(range(len(y_test_pred)), y_test_pred, color='red', label='Predicted Test Data', alpha=0.6)
+
+plt.title('Comparison of Actual vs Predicted Data for Training and Test Sets')
 plt.xlabel('Sample Index')
 plt.ylabel('Price')
 plt.legend()

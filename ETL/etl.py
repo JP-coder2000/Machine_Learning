@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 columns = ["Symboling","Normalized-losses","Make","Fuel-type", "Aspiration", "Num-of-doors", "Body-style","Drive-wheels","Engine-location","Wheel-base","Length","Width","Height", "Curb-weight", "Engine-type" , "Num-of-cylinders", "Engine-size", "Fuel-system", "Bore", "Stroke", "Compression-ratio", "Horsepower", "Peak-rpm", "City-mpg", "Highway-mpg", "Price"]
 df = pd.read_csv('/Users/juanpablocabreraquiroga/Documents/Machine_Learning/ETL/automobile/imports-85.data', names = columns)
@@ -123,8 +124,4 @@ df_scaled.to_csv('automobile_cleaned_scaled.csv', index=False)
 
 ##Update.
 # Now I will create the plot for the data.
-df_scaled.plot(kind='box', figsize=(20, 10))
-plt.show()
 
-df_scaled.plot(kind='hist', figsize=(20, 10))
-plt.show()
