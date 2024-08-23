@@ -12,3 +12,10 @@ In this repository, you will find all the tasks, projects, and homework regardin
 
 - [Final Report](./Ensayo_ML_final.pdf)  
   The final report detailing the processes and results of the machine learning project.
+
+
+###
+PRESENTED BY
+
+JUAN PABLO CABRERA QUIROGA
+A01661090
