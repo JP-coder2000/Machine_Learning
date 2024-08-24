@@ -10,7 +10,7 @@ In this repository, you will find all the tasks, projects, and homework regardin
 - [Model Creation](./Model_Creation)  
   A folder with scripts and resources used to create and evaluate the machine learning models.
 
-- [Final Report](./Ensayo_ML_final.pdf)  
+- [Final Report](./Ensayo_ML.pdf)  
   The final report detailing the processes and results of the machine learning project.
 
 
