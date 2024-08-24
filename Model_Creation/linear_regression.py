@@ -30,11 +30,15 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
     Solo que en vez de hacerlo con listas, lo hago con arrays de numpy directamente.
     """
     m = len(y)
+    mse_history = []
 
     for _ in range(iterations):
         # Le sumo el bias a la hipótesis, esto lo platiqué con Benji para no tener que tener un arreglo con 1 al principio.
         predictions = np.dot(samples.T, params) + bias
         errors = predictions - y
+        
+        mse = np.mean(np.square(errors)) / 2
+        mse_history.append(mse)
         
         # Calcular los gradientes
         gradient_params = (1/m) * np.dot(samples, errors)
@@ -44,7 +48,7 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
         params -= alpha * gradient_params
         bias -= alpha * gradient_bias
 
-    return params, bias
+    return params, bias, mse_history
 
 #samples = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
 #y = np.array([2, 4, 6, 8, 10])
@@ -103,7 +107,7 @@ params = np.zeros(X_train.shape[1])
 bias = 0.0 
 
 
-params, bias = gradient_descent(params, bias, X_train.T, y_train, alpha, iterations)
+params, bias, mse_history = gradient_descent(params, bias, X_train.T, y_train, alpha, iterations)
 
 # Calcular el error final en los datos de entrenamiento y prueba
 final_cost_train = cost_function(params, bias, X_train, y_train)
@@ -148,6 +152,16 @@ y_test_pred = np.dot(X_test, params) + bias
 
 plt.figure(figsize=(14, 8))
 
+iterations_to_plot = 3000
+mse_to_plot = mse_history[:iterations_to_plot]
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(iterations_to_plot), mse_to_plot)
+plt.title('Mean Squared Error over First 3000 Iterations')
+plt.xlabel('Iterations')
+plt.ylabel('Mean Squared Error')
+plt.yscale('log')  # Usando escala logarítmica para mejor visualización
+plt.show()
 
 plt.subplot(3, 1, 1)
 plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data')
