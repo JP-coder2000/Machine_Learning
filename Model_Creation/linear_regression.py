@@ -152,7 +152,7 @@ y_test_pred = np.dot(X_test, params) + bias
 
 plt.figure(figsize=(14, 8))
 
-iterations_to_plot = 3000
+iterations_to_plot = 1000
 mse_to_plot = mse_history[:iterations_to_plot]
 
 plt.figure(figsize=(10, 6))
