@@ -121,6 +121,48 @@ def r2_score(y_true, y_pred):
     r2 = 1 - (ss_residual / ss_total)
     return r2
 
+
+def grafica_costo(mse_history):
+    """
+    Grafico el historial de costo durante el entrenamiento.
+    """
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(len(mse_history)), mse_history)
+    plt.title('Función de costo')
+    plt.xlabel('Numero de iteraciones')
+    plt.ylabel('MSE')
+    plt.yscale('log')
+    plt.grid(True)
+    plt.show()
+
+def grafica_predicted_vs_actual(y_true, y_pred, set_name):
+    """
+    Grafico los valores predecidos vs los valores reales.
+    """
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_true, y_pred, alpha=0.5)
+    plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
+    plt.xlabel('Valores Reales')
+    plt.ylabel('Valores predecidos')
+    plt.title(f'Predecidos vs Reales - {set_name}')
+    plt.grid(True)
+    plt.show()
+
+def plot_residuals(y_true, y_pred, set_name):
+    """
+    Grafico los residuales.
+    """
+    residuals = y_true - y_pred
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_pred, residuals, alpha=0.5)
+    plt.hlines(y=0, xmin=y_pred.min(), xmax=y_pred.max(), colors='r', linestyles='--')
+    plt.xlabel('Valores predecidos')
+    plt.ylabel('Residuales')
+    plt.title(f'Grafica de Residuales- {set_name}')
+    plt.grid(True)
+    plt.show()
+    
+
 # Empiezo con el import de los datos limpios y escalados
 df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
 
@@ -211,3 +253,19 @@ plt.xlabel('Sample Index')
 plt.ylabel('Price')
 plt.legend()
 plt.show()
+
+grafica_costo(mse_history)
+
+# Graficar los valores predecidos vs los valores reales en el conjunto de entrenamiento
+y_train_pred = np.dot(X_train, params) + bias
+grafica_predicted_vs_actual(y_train, y_train_pred, 'Training Set')
+
+# Graficar los valores predecidos vs los valores reales en el conjunto de prueba
+y_test_pred = np.dot(X_test, params) + bias
+grafica_predicted_vs_actual(y_test, y_test_pred, 'Test Set')
+
+# Graficar los residuales en el conjunto de entrenamiento
+plot_residuals(y_train, y_train_pred, 'Training Set')
+
+# Graficar los residuales en el conjunto de prueba
+plot_residuals(y_test, y_test_pred, 'Test Set')
