@@ -50,43 +50,72 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
 
     return params, bias, mse_history
 
-#samples = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
-#y = np.array([2, 4, 6, 8, 10])
+def cost_function_l2(params, bias, samples, y, lambda_):
+    """
+    Calculo el MSE con regularización L2, pero ahora con la regularización L2.
+    """
+    m = len(y)
+    y_pred = np.dot(samples, params) + bias
+    mse = np.mean(np.square(y_pred - y)) / 2
+    l2_regularization = (lambda_ / (2 * m)) * np.sum(np.square(params))
+    cost = mse + l2_regularization
+    return cost
 
-# Coeficiente de aprendizaje 
-alpha = 0.01 
-# Numero de iteraciones máximas
-iterations = 1000000
+def gradient_descent_l2(params, bias, samples, y, alpha, iterations, lambda_):
+    """
+    Implemento gradiente descendente con regularización L2.
+    """
+    m = len(y)
+    cost_history = []
 
+    for _ in range(iterations):
+        y_pred = np.dot(samples, params) + bias
+        errors = y_pred - y
 
-# Después de hacer el ETL, ahora si voy a usar mi modelo lineal para empezar a predecir los precios de los carros.
-# Pero primero tengo que hacer lo que vimos en clase de separar los datos en entrenamiento y prueba.
+        # Calcular los gradientes con regularización
+        gradient_params = (1/m) * (np.dot(samples.T, errors) + lambda_ * params)
+        gradient_bias = (1/m) * np.sum(errors)
+        
+        # Actualizar los parámetros y el bias
+        params -= alpha * gradient_params
+        bias -= alpha * gradient_bias
+        
+        # Guardar el historial de costo
+        cost = cost_function_l2(params, bias, samples, y, lambda_)
+        cost_history.append(cost)
 
-def train_test_split(X, y, test_size=0.2, random_state=None):
+    return params, bias, cost_history
+
+def train_val_test_split(X, y, test_size=0.2, val_size=0.1, random_state=None):
     """
     Esta es una función muy sencilla para separar los datos de entrenamiento y prueba.
+    Update: Ahora también separo los datos que me van a ayudar para hacer de validación.
     """
-    
     if random_state is not None:
         np.random.seed(random_state)
     
     n_samples = len(X)
     n_test = int(n_samples * test_size)
+    n_val = int(n_samples * val_size)
+    n_train = n_samples - n_test - n_val
     
     indices = np.random.permutation(n_samples)
     
-    test_indices = indices[-n_test:]
-    train_indices = indices[:-n_test]
+    X_train = X[indices[:n_train]]
+    y_train = y[indices[:n_train]]
     
-    X_train = X[train_indices]
-    X_test = X[test_indices]
-    y_train = y[train_indices]
-    y_test = y[test_indices]
+    X_val = X[indices[n_train:n_train + n_val]]
+    y_val = y[indices[n_train:n_train + n_val]]
     
-    return X_train, X_test, y_train, y_test
+    X_test = X[indices[n_train + n_val:]]
+    y_test = y[indices[n_train + n_val:]]
+    
+    return X_train, X_val, X_test, y_train, y_val, y_test
 
-# Update, tengo que hacer la función para sacer el r^2
 def r2_score(y_true, y_pred):
+    """
+    Calculo el coeficiente de determinación R^2.
+    """
     ss_residual = np.sum((y_true - y_pred) ** 2)
     ss_total = np.sum((y_true - np.mean(y_true)) ** 2)
     r2 = 1 - (ss_residual / ss_total)
@@ -99,23 +128,33 @@ df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
 X = df_scaled.drop('Price', axis=1).values
 y = df_scaled['Price'].values
 
-# Separo los datos en entrenamiento y prueba
+alpha = 0.01 
+# Numero de iteraciones máximas
+iterations = 1000000
+
+# Separo los datos en entrenamiento, validación y prueba
 # Le pongo 42 porque 42 es el resultado para todo
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_val, X_test, y_train, y_val, y_test = train_val_test_split(X, y, test_size=0.2, val_size=0.1, random_state=42)
 
 params = np.zeros(X_train.shape[1])
 bias = 0.0 
+lambda_ = 0.1  # Factor de regularización
 
+params, bias, mse_history = gradient_descent_l2(params, bias, X_train, y_train, alpha, iterations, lambda_)
 
-params, bias, mse_history = gradient_descent(params, bias, X_train.T, y_train, alpha, iterations)
+# Evaluar en conjunto de validación
+y_val_pred = np.dot(X_val, params) + bias
+val_mse = cost_function_l2(params, bias, X_val, y_val, lambda_)
+val_r2 = r2_score(y_val, y_val_pred)
 
 # Calcular el error final en los datos de entrenamiento y prueba
-final_cost_train = cost_function(params, bias, X_train, y_train)
-final_cost_test = cost_function(params, bias, X_test, y_test)
+final_cost_train = cost_function_l2(params, bias, X_train, y_train, lambda_)
+final_cost_test = cost_function_l2(params, bias, X_test, y_test, lambda_)
 
 #print("Parámetros finales:", params)
 print("Bias final:", bias)
 print("Error final (entrenamiento):", final_cost_train)
+print("Error en validación:", val_mse)
 print("Error final (prueba):", final_cost_test)
 
 # Calcular R^2
@@ -126,6 +165,7 @@ r2_train = r2_score(y_train, y_train_pred)
 r2_test = r2_score(y_test, y_test_pred)
 
 print("R^2 en conjunto de entrenamiento:", r2_train)
+print("R^2 en conjunto de validación:", val_r2)
 print("R^2 en conjunto de prueba:", r2_test)
 
 # Determinar si el modelo está fitting, underfitting o overfitting
@@ -145,50 +185,28 @@ elif 0.5 <= r2_train <= 0.8:
 else:
     print("Bias alto.")
 
-# Generar predicciones
-y_train_pred = np.dot(X_train, params) + bias
-y_test_pred = np.dot(X_test, params) + bias
-
-
-plt.figure(figsize=(14, 8))
-
-iterations_to_plot = 1000
-mse_to_plot = mse_history[:iterations_to_plot]
-
+# Gráfica del historial de costo durante el entrenamiento
 plt.figure(figsize=(10, 6))
-plt.plot(range(iterations_to_plot), mse_to_plot)
-plt.title('Mean Squared Error over First 3000 Iterations')
+plt.plot(range(len(mse_history)), mse_history, label='Training Cost (L2)')
+plt.title('Cost Function with L2 Regularization')
 plt.xlabel('Iterations')
-plt.ylabel('Mean Squared Error')
+plt.ylabel('Cost')
 plt.yscale('log')  # Usando escala logarítmica para mejor visualización
+plt.legend()
 plt.show()
 
-plt.subplot(3, 1, 1)
-plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data')
-plt.scatter(range(len(y_train)), y_train_pred, color='orange', label='Predicted Training Data')
-plt.title('Training Data: Actual vs Predicted')
-plt.xlabel('Sample Index')
-plt.ylabel('Price')
-plt.legend()
-
-
-plt.subplot(3, 1, 2)
-plt.scatter(range(len(y_test)), y_test, color='green', label='Actual Test Data')
-plt.scatter(range(len(y_test)), y_test_pred, color='red', label='Predicted Test Data')
-plt.title('Test Data: Actual vs Predicted')
-plt.xlabel('Sample Index')
-plt.ylabel('Price')
-plt.legend()
-
+# Comparación de datos de entrenamiento, validación y prueba con los valores reales
 plt.figure(figsize=(14, 8))
 
-# Comparación de datos de entrenamiento y prueba con los valores reales
 plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data', alpha=0.6)
+plt.scatter(range(len(y_val)), y_val, color='purple', label='Actual Validation Data', alpha=0.6)
 plt.scatter(range(len(y_test)), y_test, color='green', label='Actual Test Data', alpha=0.6)
-plt.scatter(range(len(y_train_pred)), y_train_pred, color='orange', label='Predicted Training Data', alpha=0.6)
-plt.scatter(range(len(y_test_pred)), y_test_pred, color='red', label='Predicted Test Data', alpha=0.6)
 
-plt.title('Comparison of Actual vs Predicted Data for Training and Test Sets')
+plt.scatter(range(len(y_train)), np.dot(X_train, params) + bias, color='orange', label='Predicted Training Data', alpha=0.6)
+plt.scatter(range(len(y_val)), y_val_pred, color='pink', label='Predicted Validation Data', alpha=0.6)
+plt.scatter(range(len(y_test)), y_test_pred, color='red', label='Predicted Test Data', alpha=0.6)
+
+plt.title('Comparison of Actual vs Predicted Data for Training, Validation, and Test Sets')
 plt.xlabel('Sample Index')
 plt.ylabel('Price')
 plt.legend()
