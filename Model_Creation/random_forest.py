@@ -116,4 +116,3 @@ def grafica_predicted_vs_actual(y_true, y_pred, set_name):
 grafica_predicted_vs_actual(y_train, y_train_pred, 'Training Set')
 grafica_predicted_vs_actual(y_val, y_val_pred, 'Validation Set')
 grafica_predicted_vs_actual(y_test, y_test_pred, 'Test Set')
-grafica_costo(model.history['mse'])
