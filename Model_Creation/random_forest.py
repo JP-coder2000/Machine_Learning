@@ -20,9 +20,9 @@ X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, r
 
 # Lista de hiperparámetros a comparar: max_depth, max_leaf_nodes, min_samples_leaf
 parametros = [
-    {'max_depth': 10, 'max_leaf_nodes': 30, 'min_samples_leaf': 1},
-    {'max_depth': 20, 'max_leaf_nodes': 50, 'min_samples_leaf': 2},
-    {'max_depth': 30, 'max_leaf_nodes': 20, 'min_samples_leaf': 1},
+    {'max_depth': 10, 'max_leaf_nodes': 10, 'min_samples_leaf': 5},
+    {'max_depth': 20, 'max_leaf_nodes': 20, 'min_samples_leaf': 5},
+    {'max_depth': 5, 'max_leaf_nodes': 5, 'min_samples_leaf': 5},
 ]
 
 # Tabla para guardar los resultados
@@ -32,7 +32,7 @@ resultados = []
 for params in parametros:
     # Ahora creo el modelo de Random Forest con los hiperparámetros específicos.
     model = RandomForestRegressor(
-        n_estimators=100,
+        n_estimators=50,
         random_state=42,
         max_depth=params['max_depth'],
         max_leaf_nodes=params['max_leaf_nodes'],
@@ -104,36 +104,3 @@ plt.xticks(range(X.shape[1]), df_scaled.drop('Price', axis=1).columns[indices], 
 plt.xlabel('Características')
 plt.ylabel('Importancia')
 plt.show()
-
-
-def grafica_costo(mse_history):
-    """
-    Grafico el historial de costo durante el entrenamiento.
-    """
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(len(mse_history)), mse_history)
-    plt.title('Función de costo')
-    plt.xlabel('Numero de iteraciones')
-    plt.ylabel('MSE')
-    plt.yscale('log')
-    plt.grid(True)
-    plt.show()
-
-def grafica_predicted_vs_actual(y_true, y_pred, set_name):
-    """
-    Graficar los valores predichos vs los valores reales.
-    """
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y_true, y_pred, alpha=0.5)
-    plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
-    plt.xlabel('Valores Reales')
-    plt.ylabel('Valores predichos')
-    plt.title(f'Predecidos vs Reales - {set_name}')
-    plt.grid(True)
-    plt.show()
-
-# Finalmente, visualizo cómo las predicciones del modelo se comparan con los valores reales.
-# Hago esto para los conjuntos de entrenamiento, validación y prueba.
-grafica_predicted_vs_actual(y_train, y_train_pred, 'Training Set')
-grafica_predicted_vs_actual(y_val, y_val_pred, 'Validation Set')
-grafica_predicted_vs_actual(y_test, y_test_pred, 'Test Set')
