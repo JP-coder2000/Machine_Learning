@@ -18,54 +18,75 @@ y = df_scaled['Price'].values  # Esta es la columna que quiero predecir, es deci
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-# Ahora creo el modelo de Random Forest, utilizando 100 árboles en el bosque.
-model = RandomForestRegressor(n_estimators=100, random_state=42)
+# Lista de hiperparámetros a comparar: max_depth, max_leaf_nodes, min_samples_leaf
+parametros = [
+    {'max_depth': 10, 'max_leaf_nodes': 30, 'min_samples_leaf': 1},
+    {'max_depth': 20, 'max_leaf_nodes': 50, 'min_samples_leaf': 2},
+    {'max_depth': 30, 'max_leaf_nodes': 20, 'min_samples_leaf': 1},
+]
 
-# Entreno mi modelo utilizando el conjunto de entrenamiento. Aquí es donde el modelo aprende
-# las relaciones entre las características de los automóviles y el precio.
-model.fit(X_train, y_train)
+# Tabla para guardar los resultados
+resultados = []
 
-# Después del entrenamiento, hago predicciones en los conjuntos de entrenamiento, validación y prueba.
-y_train_pred = model.predict(X_train)
-y_val_pred = model.predict(X_val)
-y_test_pred = model.predict(X_test)
+# Recorro cada conjunto de hiperparámetros
+for params in parametros:
+    # Ahora creo el modelo de Random Forest con los hiperparámetros específicos.
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        max_depth=params['max_depth'],
+        max_leaf_nodes=params['max_leaf_nodes'],
+        min_samples_leaf=params['min_samples_leaf']
+    )
 
-# Calculo el error cuadrático medio (MSE) y el coeficiente de determinación (R^2) para cada conjunto.
-train_mse = mean_squared_error(y_train, y_train_pred)
-val_mse = mean_squared_error(y_val, y_val_pred)
-test_mse = mean_squared_error(y_test, y_test_pred)
+    # Entreno mi modelo utilizando el conjunto de entrenamiento. Aquí es donde el modelo aprende
+    # las relaciones entre las características de los automóviles y el precio.
+    model.fit(X_train, y_train)
 
-r2_train = r2_score(y_train, y_train_pred)
-r2_val = r2_score(y_val, y_val_pred)
-r2_test = r2_score(y_test, y_test_pred)
+    # Después del entrenamiento, hago predicciones en los conjuntos de entrenamiento, validación y prueba.
+    y_train_pred = model.predict(X_train)
+    y_val_pred = model.predict(X_val)
+    y_test_pred = model.predict(X_test)
 
-print("Cross-Validation MSE:", -cross_val_score(model, X, y, cv=5, scoring='neg_mean_squared_error').mean())
-print("Error final (entrenamiento):", train_mse)
-print("Error en validación:", val_mse)
-print("Error final (prueba):", test_mse)
-print("R^2 en conjunto de entrenamiento:", r2_train)
-print("R^2 en conjunto de validación:", r2_val)
-print("R^2 en conjunto de prueba:", r2_test)
+    # Calculo el error cuadrático medio (MSE) y el coeficiente de determinación (R^2) para cada conjunto.
+    train_mse = mean_squared_error(y_train, y_train_pred)
+    val_mse = mean_squared_error(y_val, y_val_pred)
+    test_mse = mean_squared_error(y_test, y_test_pred)
 
-# Para entender cómo el tamaño del conjunto de entrenamiento afecta el rendimiento del modelo,
-# trazo la curva de aprendizaje. Esto me muestra el MSE en función del tamaño del conjunto de entrenamiento.
-train_sizes, train_scores, val_scores = learning_curve(
-    model, X, y, cv=5, scoring='neg_mean_squared_error', train_sizes=np.linspace(0.1, 1.0, 10), random_state=42)
+    r2_train = r2_score(y_train, y_train_pred)
+    r2_val = r2_score(y_val, y_val_pred)
+    r2_test = r2_score(y_test, y_test_pred)
 
-train_scores_mean = -np.mean(train_scores, axis=1)
-train_scores_std = np.std(train_scores, axis=1)
-val_scores_mean = -np.mean(val_scores, axis=1)
-val_scores_std = np.std(val_scores, axis=1)
+    # Cross-validation MSE
+    cross_val_mse = -cross_val_score(model, X, y, cv=5, scoring='neg_mean_squared_error').mean()
 
+    # Guardo los resultados
+    resultados.append({
+        'max_depth': params['max_depth'],
+        'max_leaf_nodes': params['max_leaf_nodes'],
+        'min_samples_leaf': params['min_samples_leaf'],
+        'train_mse': train_mse,
+        'val_mse': val_mse,
+        'test_mse': test_mse,
+        'r2_train': r2_train,
+        'r2_val': r2_val,
+        'r2_test': r2_test,
+        'cross_val_mse': cross_val_mse
+    })
+
+# Mostrar los resultados en forma de tabla
+resultados_df = pd.DataFrame(resultados)
+print(resultados_df)
+
+# Visualización de los resultados
 plt.figure(figsize=(10, 6))
-plt.plot(train_sizes, train_scores_mean, label='Training error')
-plt.plot(train_sizes, val_scores_mean, label='Validation error')
+for i, params in enumerate(parametros):
+    plt.plot(['Train', 'Validation', 'Test'], 
+             [resultados[i]['train_mse'], resultados[i]['val_mse'], resultados[i]['test_mse']],
+             marker='o', label=f"max_depth={params['max_depth']}, max_leaf_nodes={params['max_leaf_nodes']}, min_samples_leaf={params['min_samples_leaf']}")
 
-plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.2)
-plt.fill_between(train_sizes, val_scores_mean - val_scores_std, val_scores_mean + val_scores_std, alpha=0.2)
-
-plt.title('Curva de Aprendizaje')
-plt.xlabel('Tamaño del conjunto de entrenamiento')
+plt.title('Comparación de MSE con Diferentes Hiperparámetros')
+plt.xlabel('Dataset')
 plt.ylabel('MSE')
 plt.legend()
 plt.grid(True)
