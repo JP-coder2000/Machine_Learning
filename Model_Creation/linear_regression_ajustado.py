@@ -1,3 +1,11 @@
+"""
+En este archivo estará mi modelo de regresión lineal ajustado, es decir, con regularización L2.
+"""
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -34,14 +42,14 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
 
     for _ in range(iterations):
         # Le sumo el bias a la hipótesis, esto lo platiqué con Benji para no tener que tener un arreglo con 1 al principio.
-        predictions = np.dot(samples, params) + bias
+        predictions = np.dot(samples.T, params) + bias
         errors = predictions - y
         
         mse = np.mean(np.square(errors)) / 2
         mse_history.append(mse)
         
         # Calcular los gradientes
-        gradient_params = (1/m) * np.dot(samples.T, errors)
+        gradient_params = (1/m) * np.dot(samples, errors)
         gradient_bias = (1/m) * np.sum(errors)
         
         # Actualizar los parámetros y el bias
@@ -49,6 +57,42 @@ def gradient_descent(params, bias, samples, y, alpha, iterations):
         bias -= alpha * gradient_bias
 
     return params, bias, mse_history
+
+def cost_function_l2(params, bias, samples, y, lambda_):
+    """
+    Calculo el MSE con regularización L2, pero ahora con la regularización L2.
+    """
+    m = len(y)
+    y_pred = np.dot(samples, params) + bias
+    mse = np.mean(np.square(y_pred - y)) / 2
+    l2_regularization = (lambda_ / (2 * m)) * np.sum(np.square(params))
+    cost = mse + l2_regularization
+    return cost
+
+def gradient_descent_l2(params, bias, samples, y, alpha, iterations, lambda_):
+    """
+    Implemento gradiente descendente con regularización L2.
+    """
+    m = len(y)
+    cost_history = []
+
+    for _ in range(iterations):
+        y_pred = np.dot(samples, params) + bias
+        errors = y_pred - y
+
+        # Calcular los gradientes con regularización
+        gradient_params = (1/m) * (np.dot(samples.T, errors) + lambda_ * params)
+        gradient_bias = (1/m) * np.sum(errors)
+        
+        # Actualizar los parámetros y el bias
+        params -= alpha * gradient_params
+        bias -= alpha * gradient_bias
+        
+        # Guardar el historial de costo
+        cost = cost_function_l2(params, bias, samples, y, lambda_)
+        cost_history.append(cost)
+
+    return params, bias, cost_history
 
 def train_val_test_split(X, y, test_size=0.2, val_size=0.1, random_state=None):
     """
@@ -84,6 +128,7 @@ def r2_score(y_true, y_pred):
     ss_total = np.sum((y_true - np.mean(y_true)) ** 2)
     r2 = 1 - (ss_residual / ss_total)
     return r2
+
 
 def grafica_costo(mse_history):
     """
@@ -124,7 +169,7 @@ def plot_residuals(y_true, y_pred, set_name):
     plt.title(f'Grafica de Residuales- {set_name}')
     plt.grid(True)
     plt.show()
-
+    
 
 # Empiezo con el import de los datos limpios y escalados
 df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
@@ -133,8 +178,8 @@ df_scaled = pd.read_csv('automobile_cleaned_scaled.csv')
 X = df_scaled.drop('Price', axis=1).values
 y = df_scaled['Price'].values
 
-# Hiperparámetros
 alpha = 0.01 
+# Numero de iteraciones máximas
 iterations = 1000000
 
 # Separo los datos en entrenamiento, validación y prueba
@@ -143,18 +188,20 @@ X_train, X_val, X_test, y_train, y_val, y_test = train_val_test_split(X, y, test
 
 params = np.zeros(X_train.shape[1])
 bias = 0.0 
+lambda_ = 0.1  # Factor de regularización
 
-params, bias, mse_history = gradient_descent(params, bias, X_train, y_train, alpha, iterations)
+params, bias, mse_history = gradient_descent_l2(params, bias, X_train, y_train, alpha, iterations, lambda_)
 
 # Evaluar en conjunto de validación
 y_val_pred = np.dot(X_val, params) + bias
-val_mse = cost_function(params, bias, X_val, y_val)
+val_mse = cost_function_l2(params, bias, X_val, y_val, lambda_)
 val_r2 = r2_score(y_val, y_val_pred)
 
 # Calcular el error final en los datos de entrenamiento y prueba
-final_cost_train = cost_function(params, bias, X_train, y_train)
-final_cost_test = cost_function(params, bias, X_test, y_test)
+final_cost_train = cost_function_l2(params, bias, X_train, y_train, lambda_)
+final_cost_test = cost_function_l2(params, bias, X_test, y_test, lambda_)
 
+#print("Parámetros finales:", params)
 print("Bias final:", bias)
 print("Error final (entrenamiento):", final_cost_train)
 print("Error en validación:", val_mse)
@@ -179,6 +226,7 @@ elif r2_train > r2_test:
 else:
     print("El modelo está subajustado (underfitting).")
     
+    
 # Calcular el grado de bias basado en R^2 en el conjunto de entrenamiento
 if r2_train > 0.8:
     print("Bias bajo.")
@@ -187,23 +235,45 @@ elif 0.5 <= r2_train <= 0.8:
 else:
     print("Bias alto.")
 
-# Gráficas
-grafica_costo(mse_history)
-grafica_predicted_vs_actual(y_train, y_train_pred, 'Training Set')
-grafica_predicted_vs_actual(y_test, y_test_pred, 'Test Set')
-plot_residuals(y_train, y_train_pred, 'Training Set')
-plot_residuals(y_test, y_test_pred, 'Test Set')
+# Gráfica del historial de costo durante el entrenamiento
+plt.figure(figsize=(10, 6))
+plt.plot(range(len(mse_history)), mse_history, label='Training Cost (L2)')
+plt.title('Cost Function with L2 Regularization')
+plt.xlabel('Iterations')
+plt.ylabel('Cost')
+plt.yscale('log')  # Usando escala logarítmica para mejor visualización
+plt.legend()
+plt.show()
 
 # Comparación de datos de entrenamiento, validación y prueba con los valores reales
 plt.figure(figsize=(14, 8))
+
 plt.scatter(range(len(y_train)), y_train, color='blue', label='Actual Training Data', alpha=0.6)
 plt.scatter(range(len(y_val)), y_val, color='purple', label='Actual Validation Data', alpha=0.6)
 plt.scatter(range(len(y_test)), y_test, color='green', label='Actual Test Data', alpha=0.6)
-plt.scatter(range(len(y_train)), y_train_pred, color='orange', label='Predicted Training Data', alpha=0.6)
+
+plt.scatter(range(len(y_train)), np.dot(X_train, params) + bias, color='orange', label='Predicted Training Data', alpha=0.6)
 plt.scatter(range(len(y_val)), y_val_pred, color='pink', label='Predicted Validation Data', alpha=0.6)
 plt.scatter(range(len(y_test)), y_test_pred, color='red', label='Predicted Test Data', alpha=0.6)
+
 plt.title('Comparison of Actual vs Predicted Data for Training, Validation, and Test Sets')
 plt.xlabel('Sample Index')
 plt.ylabel('Price')
 plt.legend()
 plt.show()
+
+grafica_costo(mse_history)
+
+# Graficar los valores predecidos vs los valores reales en el conjunto de entrenamiento
+y_train_pred = np.dot(X_train, params) + bias
+grafica_predicted_vs_actual(y_train, y_train_pred, 'Training Set')
+
+# Graficar los valores predecidos vs los valores reales en el conjunto de prueba
+y_test_pred = np.dot(X_test, params) + bias
+grafica_predicted_vs_actual(y_test, y_test_pred, 'Test Set')
+
+# Graficar los residuales en el conjunto de entrenamiento
+plot_residuals(y_train, y_train_pred, 'Training Set')
+
+# Graficar los residuales en el conjunto de prueba
+plot_residuals(y_test, y_test_pred, 'Test Set')
