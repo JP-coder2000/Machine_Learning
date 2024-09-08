@@ -7,10 +7,10 @@ In this repository, you will find all the tasks, projects, and homework regardin
 - [ETL Process](./ETL)  
   A folder containing all scripts and related files for the ETL process.
 
-- [Lineal Regresion Model](./Model_Creation/linear_regression.py)  
+- [Linear Regression Model](./Model_Creation/linear_regression.py)  
   This python file contains my lineal regression model which I built without using any framework.
   
-- [Lineal Regresion Model with Regularization](./Model_Creation/linear_regression_ajustado.py)  
+- [Linear Regression Model with Regularization](./Model_Creation/linear_regression_ajustado.py)  
   This python file contains my lineal regression model which I built without using any framework. The difference with this code is that I also implemented L2 Ridge regularization.
 
 - [Random Forest Model](./Model_Creation/random_forest.py)
